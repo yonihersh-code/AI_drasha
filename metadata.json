@@ -1,0 +1,5 @@
+{
+  "name": "Zooz Drasha Generator",
+  "description": "An AI-powered application by Zooz to help users generate a drasha for a synagogue service, tailored to a specific Torah portion, length, and rabbinic style.",
+  "requestFramePermissions": []
+}
