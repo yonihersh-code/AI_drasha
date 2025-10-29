@@ -1,17 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 import type { DrashaLength, RabbinicStyle, TorahPortion } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const generateDrasha = async (
   torahPortion: TorahPortion,
   length: DrashaLength,
   style: RabbinicStyle | string
 ): Promise<string> => {
+
+  if (!process.env.API_KEY) {
+    throw new Error("API_KEY is not configured. Please add it to your deployment environment variables.");
+  }
+  
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
   const prompt = `
     Generate a drasha for a synagogue service.
 
@@ -39,6 +40,6 @@ export const generateDrasha = async (
     return response.text;
   } catch (error) {
     console.error("Error generating drasha:", error);
-    throw new Error("Failed to communicate with the AI model.");
+    throw new Error("Failed to communicate with the AI model. The API key may be invalid or the service may be unavailable.");
   }
 };
