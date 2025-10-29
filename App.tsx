@@ -22,7 +22,7 @@ const App: React.FC = () => {
       const generatedDrasha = await generateDrashaService(torahPortion, length, style);
       setDrasha(generatedDrasha);
     } catch (err) {
-      setError('Failed to generate drasha. Please try again.');
+      setError((err as Error).message);
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -41,7 +41,7 @@ const App: React.FC = () => {
       <main className="w-full max-w-4xl bg-slate-800 rounded-lg shadow-xl p-6 sm:p-8">
         <DrashaForm onGenerate={handleGenerateDrasha} isLoading={isLoading} />
         <div className="mt-8">
-          {error && <p className="text-red-400 text-center">{error}</p>}
+          {error && <p className="text-red-400 text-center bg-red-900/20 p-3 rounded-md border border-red-800">{error}</p>}
           <DrashaDisplay drasha={drasha} isLoading={isLoading} />
         </div>
       </main>
