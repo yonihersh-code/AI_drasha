@@ -1,8 +1,6 @@
 // Using URL import as a fallback for environments without package.json
 // @ts-ignore - Assuming the runtime supports URL imports
 import { GoogleGenAI } from "https://aistudiocdn.com/@google/genai@^1.27.0";
-// Assuming the serverless function can import from the parent directory.
-import type { DrashaLength, RabbinicStyle, TorahPortion } from '../types';
 
 // This function signature is designed to be compatible with modern edge runtimes (Vercel, Netlify, etc.)
 export default async (req: Request): Promise<Response> => {
@@ -14,10 +12,12 @@ export default async (req: Request): Promise<Response> => {
   }
 
   try {
+    // The serverless function doesn't need strict types, as validation happens on the client.
+    // Using `string` prevents a module resolution error from the `../types` import.
     const { torahPortion, length, style } = (await req.json()) as {
-      torahPortion: TorahPortion;
-      length: DrashaLength;
-      style: RabbinicStyle | string;
+      torahPortion: string;
+      length: string;
+      style: string;
     };
 
     if (!process.env.API_KEY) {
