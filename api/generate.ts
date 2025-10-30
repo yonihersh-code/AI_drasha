@@ -1,79 +1,88 @@
-import type { DrashaLength, RabbinicStyle, TorahPortion } from '../types';
+// Use a standard package import that serverless environments can resolve.
+import { GoogleGenAI } from "@google/genai";
 
-interface StreamCallbacks {
-  onChunk: (chunk: string) => void;
-  onComplete: () => void;
-  onError: (error: Error) => void;
-}
+// This function signature is designed to be compatible with modern edge runtimes (Vercel, Netlify, etc.)
+export default async (req: Request): Promise<Response> => {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
-export const generateDrasha = async (
-  torahPortion: TorahPortion,
-  length: DrashaLength,
-  style: RabbinicStyle | string,
-  callbacks: StreamCallbacks
-): Promise<void> => {
-  const { onChunk, onComplete, onError } = callbacks;
   try {
-    const response = await fetch('/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ torahPortion, length, style }),
+    const { torahPortion, length, style } = (await req.json()) as {
+      torahPortion: string;
+      length: string;
+      style: string;
+    };
+
+    if (!process.env.API_KEY) {
+      console.error("API_KEY is not configured on the server.");
+      return new Response(JSON.stringify({ error: 'The application is not configured correctly. Please contact the administrator.' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+    const prompt = `
+      Generate a drasha for a synagogue service.
+
+      **Torah Portion / Chag:** ${torahPortion}
+      **Desired Length:** ${length}
+      **In the style of:** ${style}
+
+      The drasha should be inspiring, insightful, and appropriate for a diverse congregation.
+      It should connect the themes of the Torah portion/chag to contemporary life.
+      Please structure it with an introduction, a body with a few key points, and a concluding message.
+      
+      IMPORTANT: When quoting from Tanakh, Talmud, or other Jewish sources, you MUST provide the original Hebrew text, followed by an English translation and the source reference in parentheses.
+      For example: a quote should be formatted like this: "כִּ֤י מִצִּיּוֹן֙ תֵּצֵ֣א תוֹרָ֔ה וּדְבַר־יְהוָ֖ה מִירוּשָׁלִָֽם׃" - "For out of Zion shall go forth the law, and the word of the LORD from Jerusalem." (Isaiah 2:3).
+
+      Do not include a title for the drasha.
+      Format the output in Markdown.
+    `;
+
+    const responseStream = await ai.models.generateContentStream({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+    
+    const stream = new ReadableStream({
+        async start(controller) {
+            const encoder = new TextEncoder();
+            for await (const chunk of responseStream) {
+                const text = chunk.text;
+                if (text) {
+                    // Format as Server-Sent Event (SSE)
+                    const data = `data: ${JSON.stringify({ text })}\n\n`;
+                    controller.enqueue(encoder.encode(data));
+                }
+            }
+            controller.close();
+        },
     });
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'An unknown server error occurred.' }));
-        throw new Error(errorData.error || `Server responded with status ${response.status}`);
-    }
-
-    if (!response.body) {
-      throw new Error('The response from the server is empty.');
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    const processStream = async () => {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          onComplete();
-          break;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
-        
-        // Keep the last partial line in the buffer
-        buffer = lines.pop() || ''; 
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const jsonString = line.substring(6);
-            try {
-              const parsed = JSON.parse(jsonString);
-              if (parsed.text) {
-                onChunk(parsed.text);
-              } else if (parsed.error) {
-                throw new Error(parsed.error);
-              }
-            } catch (e) {
-              console.error('Failed to parse stream chunk:', jsonString, e);
-            }
-          }
-        }
-      }
-    };
-    
-    processStream().catch(err => {
-        console.error("Error processing stream:", err);
-        onError(err instanceof Error ? err : new Error('An error occurred while reading the response.'));
+    return new Response(stream, {
+        headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+        },
     });
 
   } catch (error) {
-    console.error("Error communicating with serverless function:", error);
-    onError(error instanceof Error ? error : new Error('An unknown error occurred.'));
+    console.error("Error in /api/generate:", error);
+    const errorJson = JSON.stringify({ error: 'The AI model failed to generate a response.' });
+    if (error instanceof Response) {
+      // If the error is already a Response object, forward it
+      return error;
+    }
+    return new Response(errorJson, {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 };
