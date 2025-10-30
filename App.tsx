@@ -10,7 +10,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleGenerateDrasha = useCallback(async (
+  const handleGenerateDrasha = useCallback((
     torahPortion: TorahPortion,
     length: DrashaLength,
     style: RabbinicStyle | string
@@ -18,15 +18,19 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setDrasha('');
-    try {
-      const generatedDrasha = await generateDrashaService(torahPortion, length, style);
-      setDrasha(generatedDrasha);
-    } catch (err) {
-      setError((err as Error).message);
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+
+    generateDrashaService(torahPortion, length, style, {
+      onChunk: (chunk: string) => {
+        setDrasha(prevDrasha => prevDrasha + chunk);
+      },
+      onComplete: () => {
+        setIsLoading(false);
+      },
+      onError: (err: Error) => {
+        setError(err.message);
+        setIsLoading(false);
+      },
+    });
   }, []);
 
   return (
