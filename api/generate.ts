@@ -1,6 +1,5 @@
-// Using URL import as a fallback for environments without package.json
-// @ts-ignore - Assuming the runtime supports URL imports
-import { GoogleGenAI } from "https://aistudiocdn.com/@google/genai@^1.27.0";
+// Use a standard package import that serverless environments can resolve.
+import { GoogleGenAI } from "@google/genai";
 
 // This function signature is designed to be compatible with modern edge runtimes (Vercel, Netlify, etc.)
 export default async (req: Request): Promise<Response> => {
