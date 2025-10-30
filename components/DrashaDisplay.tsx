@@ -58,7 +58,7 @@ const DrashaDisplay: React.FC<DrashaDisplayProps> = ({ drasha, isLoading }) => {
   };
 
 
-  if (isLoading) {
+  if (isLoading && !drasha) { // Only show skeleton if drasha is empty
     return (
       <div className="mt-6 p-6 rounded-md border border-slate-700 bg-slate-900/50">
           <div className="space-y-4 animate-pulse">
@@ -74,7 +74,7 @@ const DrashaDisplay: React.FC<DrashaDisplayProps> = ({ drasha, isLoading }) => {
     );
   }
 
-  if (!drasha) {
+  if (!drasha && !isLoading) {
     return (
       <div className="text-center text-slate-500 py-10 border-2 border-dashed border-slate-700 rounded-lg mt-6">
         <p className="text-lg">Your generated drasha will appear here.</p>
