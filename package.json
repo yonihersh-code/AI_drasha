@@ -1,8 +1,8 @@
 {
-  "name": "zooz-drasha-generator-api",
+  "name": "zooz-drasha-generator",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend dependencies for the Zooz Drasha Generator.",
+  "description": "Server-side dependency for the Zooz Drasha Generator.",
   "dependencies": {
     "@google/genai": "^1.27.0"
   }
