@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import type { DrashaLength, RabbinicStyle, TorahPortion } from './types';
-import { generateDrasha as generateDrashaService } from './services/geminiService';
-import DrashaForm from './components/DrashaForm';
-import DrashaDisplay from './components/DrashaDisplay';
-import { SparklesIcon } from './components/icons/SparklesIcon';
+import type { DrashaLength, RabbinicStyle, TorahPortion } from './types.ts';
+import { generateDrasha as generateDrashaService } from './services/geminiService.ts';
+import DrashaForm from './components/DrashaForm.tsx';
+import DrashaDisplay from './components/DrashaDisplay.tsx';
+import { SparklesIcon } from './components/icons/SparklesIcon.tsx';
 
 const App: React.FC = () => {
   const [drasha, setDrasha] = useState<string>('');
