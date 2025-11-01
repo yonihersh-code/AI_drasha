@@ -1,4 +1,4 @@
-import type { DrashaLength, RabbinicStyle, TorahPortion } from '../types';
+import type { DrashaLength, RabbinicStyle, TorahPortion } from '../types.ts';
 
 interface StreamCallbacks {
   onChunk: (chunk: string) => void;
