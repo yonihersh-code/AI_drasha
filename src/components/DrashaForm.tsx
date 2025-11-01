@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import type { DrashaLength, RabbinicStyle, TorahPortion } from '../types';
-import { drashaLengths, rabbinicStyles, torahPortionsAndHolidays, CUSTOM_RABBI_STYLE } from '../types';
-import { SparklesIcon } from './icons/SparklesIcon';
+import type { DrashaLength, RabbinicStyle, TorahPortion } from '../types.ts';
+import { drashaLengths, rabbinicStyles, torahPortionsAndHolidays, CUSTOM_RABBI_STYLE } from '../types.ts';
+import { SparklesIcon } from './icons/SparklesIcon.tsx';
 
 interface DrashaFormProps {
   onGenerate: (torahPortion: TorahPortion, length: DrashaLength, style: RabbinicStyle | string) => void;
