@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { CopyIcon } from './icons/CopyIcon';
-import { PrintIcon } from './icons/PrintIcon';
-import { ShareIcon } from './icons/ShareIcon';
+import { CopyIcon } from './icons/CopyIcon.tsx';
+import { PrintIcon } from './icons/PrintIcon.tsx';
+import { ShareIcon } from './icons/ShareIcon.tsx';
 
 interface DrashaDisplayProps {
   drasha: string;
