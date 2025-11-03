@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { torahPortion, length, style } = req.body;
+    const { torahPortion, length, style, specificTopic } = req.body;
 
     if (!process.env.API_KEY) {
       console.error("API_KEY is not configured on the server.");
@@ -16,15 +16,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+    const topicInstruction = specificTopic
+      ? `\n**Specific Topic to Include:** ${specificTopic}`
+      : '';
+
     const prompt = `
       Generate a drasha for a synagogue service.
 
       **Torah Portion / Chag:** ${torahPortion}
       **Desired Length:** ${length}
-      **In the style of:** ${style}
+      **In the style of:** ${style}${topicInstruction}
 
       The drasha should be inspiring, insightful, and appropriate for a diverse congregation.
       It should connect the themes of the Torah portion/chag to contemporary life.
+      ${specificTopic ? 'It is crucial that you incorporate and focus on the specific topic mentioned above.' : ''}
       Please structure it with an introduction, a body with a few key points, and a concluding message.
       
       IMPORTANT: When quoting from Tanakh, Talmud, or other Jewish sources, you MUST provide the original Hebrew text, followed by an English translation and the source reference in parentheses.
