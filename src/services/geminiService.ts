@@ -10,6 +10,7 @@ export const generateDrasha = async (
   torahPortion: TorahPortion,
   length: DrashaLength,
   style: RabbinicStyle | string,
+  specificTopic: string,
   callbacks: StreamCallbacks
 ): Promise<void> => {
   const { onChunk, onComplete, onError } = callbacks;
@@ -19,7 +20,7 @@ export const generateDrasha = async (
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ torahPortion, length, style }),
+      body: JSON.stringify({ torahPortion, length, style, specificTopic }),
     });
 
     if (!response.ok) {
