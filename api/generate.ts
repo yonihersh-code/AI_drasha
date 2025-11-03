@@ -1,28 +1,17 @@
-// Use a standard package import that serverless environments can resolve.
 import { GoogleGenAI } from "@google/genai";
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// This function signature is designed to be compatible with modern edge runtimes (Vercel, Netlify, etc.)
-export default async (req: Request): Promise<Response> => {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    const { torahPortion, length, style } = (await req.json()) as {
-      torahPortion: string;
-      length: string;
-      style: string;
-    };
+    const { torahPortion, length, style } = req.body;
 
     if (!process.env.API_KEY) {
       console.error("API_KEY is not configured on the server.");
-      return new Response(JSON.stringify({ error: 'The application is not configured correctly. Please contact the administrator.' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return res.status(500).json({ error: 'The application is not configured correctly. Please contact the administrator.' });
     }
 
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -50,39 +39,26 @@ export default async (req: Request): Promise<Response> => {
       contents: prompt,
     });
     
-    const stream = new ReadableStream({
-        async start(controller) {
-            const encoder = new TextEncoder();
-            for await (const chunk of responseStream) {
-                const text = chunk.text;
-                if (text) {
-                    // Format as Server-Sent Event (SSE)
-                    const data = `data: ${JSON.stringify({ text })}\n\n`;
-                    controller.enqueue(encoder.encode(data));
-                }
-            }
-            controller.close();
-        },
-    });
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
 
-    return new Response(stream, {
-        headers: {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-        },
-    });
+    for await (const chunk of responseStream) {
+        const text = chunk.text;
+        if (text) {
+            const data = `data: ${JSON.stringify({ text })}\n\n`;
+            res.write(data);
+        }
+    }
+    
+    res.end();
 
   } catch (error) {
     console.error("Error in /api/generate:", error);
-    const errorJson = JSON.stringify({ error: 'The AI model failed to generate a response.' });
-    if (error instanceof Response) {
-      // If the error is already a Response object, forward it
-      return error;
+    // Ensure we don't try to write to a stream that's already closed.
+    if (!res.writableEnded) {
+      res.status(500).json({ error: 'The AI model failed to generate a response.' });
     }
-    return new Response(errorJson, {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
   }
-};
+}
