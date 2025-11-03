@@ -4,7 +4,7 @@ import { drashaLengths, rabbinicStyles, torahPortionsAndHolidays, CUSTOM_RABBI_S
 import { SparklesIcon } from './icons/SparklesIcon.tsx';
 
 interface DrashaFormProps {
-  onGenerate: (torahPortion: TorahPortion, length: DrashaLength, style: RabbinicStyle | string) => void;
+  onGenerate: (torahPortion: TorahPortion, length: DrashaLength, style: RabbinicStyle | string, specificTopic: string) => void;
   isLoading: boolean;
 }
 
@@ -13,12 +13,13 @@ const DrashaForm: React.FC<DrashaFormProps> = ({ onGenerate, isLoading }) => {
   const [length, setLength] = useState<DrashaLength>(drashaLengths[0]);
   const [style, setStyle] = useState<RabbinicStyle>(rabbinicStyles[0]);
   const [customStyle, setCustomStyle] = useState<string>('');
+  const [specificTopic, setSpecificTopic] = useState<string>('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const finalStyle = style === CUSTOM_RABBI_STYLE ? customStyle : style;
     if (!finalStyle) return;
-    onGenerate(torahPortion, length, finalStyle);
+    onGenerate(torahPortion, length, finalStyle, specificTopic);
   };
 
   return (
@@ -102,6 +103,22 @@ const DrashaForm: React.FC<DrashaFormProps> = ({ onGenerate, isLoading }) => {
           </div>
         </div>
       )}
+
+      <div>
+        <label htmlFor="specific-topic" className="block text-sm font-medium text-slate-300">
+          Specific Topic (Optional)
+        </label>
+        <div className="mt-1">
+          <textarea
+            id="specific-topic"
+            rows={3}
+            value={specificTopic}
+            onChange={(e) => setSpecificTopic(e.target.value)}
+            placeholder="e.g., The importance of community, finding light in darkness, a personal story..."
+            className="w-full bg-slate-700 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+          />
+        </div>
+      </div>
 
       <div>
         <button
