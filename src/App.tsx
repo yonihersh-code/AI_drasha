@@ -13,13 +13,14 @@ const App: React.FC = () => {
   const handleGenerateDrasha = useCallback((
     torahPortion: TorahPortion,
     length: DrashaLength,
-    style: RabbinicStyle | string
+    style: RabbinicStyle | string,
+    specificTopic: string
   ) => {
     setIsLoading(true);
     setError(null);
     setDrasha('');
 
-    generateDrashaService(torahPortion, length, style, {
+    generateDrashaService(torahPortion, length, style, specificTopic, {
       onChunk: (chunk: string) => {
         setDrasha(prevDrasha => prevDrasha + chunk);
       },
